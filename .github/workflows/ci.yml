@@ -1,0 +1,62 @@
+name: Formula CI
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: formula-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-15-intel, ubuntu-22.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_ANALYTICS: 1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+      - name: Install tap from this checkout
+        run: |
+          brew tap paceydev/tap "$GITHUB_WORKSPACE"
+          brew trust --formula paceydev/tap/gitforge-mcp
+          brew style paceydev/tap/gitforge-mcp
+          brew install paceydev/tap/gitforge-mcp
+          brew test paceydev/tap/gitforge-mcp
+          brew linkage --test paceydev/tap/gitforge-mcp
+      - name: Smoke-test the MCP handshake
+        run: |
+          python3 scripts/smoke.py "$(brew --prefix)/bin/gitforge-mcp"
+      - name: Check reinstall, revision upgrade and removal
+        run: |
+          brew reinstall paceydev/tap/gitforge-mcp
+          brew test paceydev/tap/gitforge-mcp
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          import subprocess
+          tap = Path(subprocess.check_output(["brew", "--repository", "paceydev/tap"], text=True).strip())
+          formula = tap / "Formula/gitforge-mcp.rb"
+          source = formula.read_text()
+          formula.write_text(source.replace('  version "', '  revision 1\n  version "', 1))
+          PYTHON
+          brew upgrade paceydev/tap/gitforge-mcp
+          brew test paceydev/tap/gitforge-mcp
+          brew uninstall paceydev/tap/gitforge-mcp
+          test ! -e "$(brew --prefix)/bin/gitforge-mcp"
+  gate:
+    if: always()
+    needs: install
+    runs-on: ubuntu-22.04
+    steps:
+      - env:
+          RESULT: ${{ needs.install.result }}
+        run: test "$RESULT" = success

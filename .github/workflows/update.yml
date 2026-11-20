@@ -1,0 +1,58 @@
+name: Update formula
+on:
+  schedule:
+    - cron: '23 22 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: update-formula
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify release and update formula
+        id: release
+        run: |
+          python3 scripts/verify-release.py > /tmp/version
+          version=$(cat /tmp/version)
+          python3 scripts/update-formula.py "$version" /tmp/upstream/SHA256SUMS
+          if git diff --quiet -- Formula/gitforge-mcp.rb; then
+            exit 0
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Propose update and dispatch tests
+        if: steps.release.outputs.version != ''
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          branch="codex/gitforge-mcp-$VERSION"
+          if gh api "repos/$GH_REPO/git/ref/heads/$branch" >/dev/null 2>&1; then
+            echo "Update branch already exists; retaining it for review."
+            if ! gh pr view "$branch" --json number >/dev/null 2>&1; then
+              gh pr create --base main --head "$branch" --title "Update gitforge-mcp to $VERSION" --body 'Update verified upstream archives. Native installation tests are dispatched separately. Review before merging.'
+            fi
+            gh workflow run ci.yml --ref "$branch"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git add Formula/gitforge-mcp.rb
+          git commit -m "Update gitforge-mcp to $VERSION"
+          gh auth setup-git
+          git push "https://github.com/$GH_REPO.git" "HEAD:refs/heads/$branch"
+          gh pr create --base main --head "$branch" --title "Update gitforge-mcp to $VERSION" --body 'Update the pinned release archives after verifying SHA-256 checksums and GitHub build attestations. Native installation checks are dispatched separately. Review before merging.'
+          gh workflow run ci.yml --ref "$branch"
