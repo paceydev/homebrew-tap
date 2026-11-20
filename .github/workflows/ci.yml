@@ -27,7 +27,6 @@ jobs:
       - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
       - name: Install tap from this checkout
         run: |
-          brew tap paceydev/tap "$GITHUB_WORKSPACE"
           brew trust --formula paceydev/tap/gitforge-mcp
           brew style paceydev/tap/gitforge-mcp
           brew install paceydev/tap/gitforge-mcp
