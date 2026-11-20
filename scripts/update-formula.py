@@ -23,10 +23,13 @@ lines = [
     '  homepage "https://github.com/paceydev/gitforge-mcp"',
     f'  version "{args.version}"',
     '  license any_of: ["MIT", "Apache-2.0"]',
+    *(['  revision 1'] if args.version == "0.2.0" else []),
     '',
 ]
 for os_name, suffix, extension in [("macos", "apple-darwin", "zip"), ("linux", "unknown-linux-gnu", "tar.gz")]:
     lines.append(f"  on_{os_name} do")
+    if os_name == "linux":
+        lines += ['    depends_on "patchelf" => :build', '    depends_on "gcc"', ""]
     for arch, target in [("arm", "aarch64"), ("intel", "x86_64")]:
         name = f"gitforge-mcp-{args.version}-{target}-{suffix}.{extension}"
         if name not in sums:
@@ -36,6 +39,11 @@ for os_name, suffix, extension in [("macos", "apple-darwin", "zip"), ("linux", "
 lines += [
     '  def install',
     '    bin.install "gitforge-mcp"',
+    '    if OS.linux?',
+    '      system HOMEBREW_PREFIX/"lib/ld.so", formula_opt_bin("patchelf")/"patchelf",',
+    '             "--set-rpath", "#{formula_opt_lib("gcc")}/gcc/current:#{HOMEBREW_PREFIX}/lib",',
+    '             bin/"gitforge-mcp"',
+    '    end',
     '    doc.install "README.md" if File.exist?("README.md")',
     '  end',
     '',

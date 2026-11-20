@@ -41,11 +41,15 @@ jobs:
           brew test paceydev/tap/gitforge-mcp
           python3 - <<'PYTHON'
           from pathlib import Path
+          import re
           import subprocess
           tap = Path(subprocess.check_output(["brew", "--repository", "paceydev/tap"], text=True).strip())
           formula = tap / "Formula/gitforge-mcp.rb"
           source = formula.read_text()
-          formula.write_text(source.replace('  version "', '  revision 1\n  version "', 1))
+          match = re.search(r"^  revision (\d+)$", source, re.M)
+          revision = int(match[1]) + 1 if match else 1
+          source = re.sub(r"^  revision \d+\n", "", source, flags=re.M)
+          formula.write_text(source.replace('  version "', f'  revision {revision}\n  version "', 1))
           PYTHON
           brew upgrade paceydev/tap/gitforge-mcp
           brew test paceydev/tap/gitforge-mcp

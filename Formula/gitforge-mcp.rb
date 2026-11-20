@@ -3,6 +3,7 @@ class GitforgeMcp < Formula
   homepage "https://github.com/paceydev/gitforge-mcp"
   version "0.2.0"
   license any_of: ["MIT", "Apache-2.0"]
+  revision 1
 
   on_macos do
     on_arm do
@@ -16,6 +17,9 @@ class GitforgeMcp < Formula
   end
 
   on_linux do
+    depends_on "patchelf" => :build
+    depends_on "gcc"
+
     on_arm do
       url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.0/gitforge-mcp-0.2.0-aarch64-unknown-linux-gnu.tar.gz"
       sha256 "3b16740c2af568a176cf476f27fcdc75253306a536df5eefc59cb0e94ac22d82"
@@ -28,6 +32,11 @@ class GitforgeMcp < Formula
 
   def install
     bin.install "gitforge-mcp"
+    if OS.linux?
+      system HOMEBREW_PREFIX/"lib/ld.so", formula_opt_bin("patchelf")/"patchelf",
+             "--set-rpath", "#{formula_opt_lib("gcc")}/gcc/current:#{HOMEBREW_PREFIX}/lib",
+             bin/"gitforge-mcp"
+    end
     doc.install "README.md" if File.exist?("README.md")
   end
 
