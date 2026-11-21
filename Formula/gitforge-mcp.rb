@@ -1,18 +1,17 @@
 class GitforgeMcp < Formula
   desc "Forge-aware MCP tools for CI, pull requests and repository settings"
   homepage "https://github.com/paceydev/gitforge-mcp"
-  version "0.2.0"
+  version "0.2.1"
   license any_of: ["MIT", "Apache-2.0"]
-  revision 1
 
   on_macos do
     on_arm do
-      url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.0/gitforge-mcp-0.2.0-aarch64-apple-darwin.zip"
-      sha256 "d54925069dc6b942ce53ff1b12587e6fe2579de2ff44f4e9611de3d094a3a7a0"
+      url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.1/gitforge-mcp-0.2.1-aarch64-apple-darwin.zip"
+      sha256 "dc13be1a462da88343fd9b913be87f7b604795c55bf43aa4db16c19e9f2ca3d6"
     end
     on_intel do
-      url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.0/gitforge-mcp-0.2.0-x86_64-apple-darwin.zip"
-      sha256 "3cf215cf31f9dec86d1e016a7a880dc976874d2ca514bd0ae186ee013de1890e"
+      url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.1/gitforge-mcp-0.2.1-x86_64-apple-darwin.zip"
+      sha256 "9973639739bbce4ad4cc1a1858d63dac10b0c96a6bee929f044b1a959b4241d8"
     end
   end
 
@@ -21,12 +20,12 @@ class GitforgeMcp < Formula
     depends_on "gcc"
 
     on_arm do
-      url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.0/gitforge-mcp-0.2.0-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "3b16740c2af568a176cf476f27fcdc75253306a536df5eefc59cb0e94ac22d82"
+      url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.1/gitforge-mcp-0.2.1-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "851f35d72d5647b5906dd24ef9e2d7a3461d431e25c1d07464d71215b2152f5b"
     end
     on_intel do
-      url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.0/gitforge-mcp-0.2.0-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "a0bbe653c234525a4374d39dd6c09b633a3bbf1dadb8d4cbcb3e193093d3d534"
+      url "https://github.com/paceydev/gitforge-mcp/releases/download/v0.2.1/gitforge-mcp-0.2.1-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "5a8fb4ad890b2a4e3088689e9d923ff3355d341e34aa64bd4382ded129b33b8c"
     end
   end
 
